@@ -8,4 +8,7 @@ interface PromoçãoInterface {
     fun delete(id: Long)
     fun update(id: Long, promoçãoModel: PromoçãoModel)
     fun searchByLocal(local: String): List<PromoçãoModel>
+    fun getAll(start: Int, size: Int): List<PromoçãoModel>
+    fun count(): Long
+    fun getAllSortedByLocal(): List<PromoçãoModel>
 }
