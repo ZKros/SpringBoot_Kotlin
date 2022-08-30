@@ -1,5 +1,7 @@
 package com.acme.tour.controller
 
+import com.acme.tour.exception.PromoçãoNotFounException
+import com.acme.tour.model.ErrorMessage
 import com.acme.tour.model.PromoçãoModel
 import com.acme.tour.model.RespostaJSON
 import com.acme.tour.service.PromoçãoServiceImpl
@@ -25,10 +27,12 @@ class PromoçãoController {
     lateinit var promoçãoService: PromoçãoServiceImpl
 
     @GetMapping("/{id}")
-    fun getId(@PathVariable id: Long): ResponseEntity<PromoçãoModel?> {
+    fun getId(@PathVariable id: Long): ResponseEntity<Any?> {
         var promoção = promoçãoService.getById(id)
-        var status = if(promoção == null) HttpStatus.NOT_FOUND else HttpStatus.OK
-        return ResponseEntity(promoção, status)
+        return if(promoção != null)
+            return ResponseEntity(promoção, HttpStatus.OK)
+        else
+            return ResponseEntity(ErrorMessage("Promoção não localizada", "Promoção ${id} não localizado"), HttpStatus.NOT_FOUND)
     }
 
     @PostMapping()
@@ -61,15 +65,17 @@ class PromoçãoController {
     }
 
     @GetMapping()
-    fun getAll(@RequestParam(required = false, defaultValue = "") localFilter: String): ResponseEntity<List<PromoçãoModel>> {
-        var status = HttpStatus.OK
-        val listaPromoções = this.promoçãoService.searchByLocal(localFilter)
-        if(listaPromoções.size == 0) {
-            status = HttpStatus.NOT_FOUND
-
-        }
-        return ResponseEntity(listaPromoções, status)
+    fun getAll(@RequestParam(required = false, defaultValue = "0") start: Int,
+               @RequestParam(required = false, defaultValue = "5") size: Int) : ResponseEntity<List<PromoçãoModel>
+    {
+        val list = this.promoçãoService.getAll(start, size)
+        val status = if(list.size == 0) HttpStatus.NOT_FOUND else HttpStatus.OK
+        return ResponseEntity(list, status)
     }
-
+    @GetMapping("/count")
+    fun count(): ResponseEntity<Map<String, Long>> =
+         ResponseEntity.ok().body(mapOf("count" to this.promoçãoService.count()))
+    @GetMapping("/ordenanos")
+    fun ordenados() = this.promoçãoService.getAllSortedByLocal()
 
     }
